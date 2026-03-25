@@ -229,14 +229,24 @@
 
   // ---- Update alert status in PostgreSQL ----
   window.updateStatus = async function (e, id, status) {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     try {
       await getToken();
-      await apiPatch(`/api/alerts/${id}`, { status });
-      if (allAlerts[id]) allAlerts[id].status = status;
-      if (status === 'attended' && markers[id]) {
-        markers[id].setIcon(makeIcon('attended'));
+      const updated = await apiPatch(`/api/alerts/${id}`, { status });
+      
+      // Update local state immediately
+      allAlerts[id] = updated;
+      
+      // If no longer active, cleanup marker
+      if (status === 'attended' || status === 'cancelled') {
+        if (markers[id]) {
+          map.removeLayer(markers[id]);
+          delete markers[id];
+        }
+      } else if (markers[id]) {
+        markers[id].setIcon(makeIcon(status));
       }
+      
       renderLists();
       updateStats();
     } catch (e) {
