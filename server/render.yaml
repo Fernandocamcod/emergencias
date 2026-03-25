@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: alerta-emergencia-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Set this in Render dashboard
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: ADMIN_EMAIL
+        value: leandroescorza789@gmail.com
