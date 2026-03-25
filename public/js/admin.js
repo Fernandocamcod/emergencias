@@ -75,6 +75,7 @@
     try {
       await getToken();
       const alerts = await apiGet('/api/alerts');
+      console.log('--- ADMIN FETCH ---', alerts.length, 'alerts found');
       return Array.isArray(alerts) ? alerts : [];
     } catch (e) {
       console.warn('Fetch alerts error:', e.message);

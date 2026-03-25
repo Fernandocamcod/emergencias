@@ -4,6 +4,19 @@ const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
 const pool    = require('./db');
+const fs      = require('fs');
+
+// ---- Auto-Initialize Database ----
+async function ensureTables() {
+  try {
+    const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+    await pool.query(schema);
+    console.log('✅ Base de datos verificada/inicializada.');
+  } catch (err) {
+    console.warn('⚠️ Nota sobre DB:', err.message);
+  }
+}
+ensureTables();
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -11,6 +24,15 @@ const PORT = process.env.PORT || 3001;
 // ---- Middleware ----
 app.use(cors());
 app.use(express.json());
+
+// ---- Request Logging ----
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} | ${req.method} ${req.url}`);
+  if (req.method === 'POST' || req.method === 'PATCH') {
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
 
 // ---- Serve Static Files (Frontend) ----
 app.use(express.static(path.join(__dirname, '../public')));
