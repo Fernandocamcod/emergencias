@@ -17,9 +17,7 @@ const AUTH_BASE = `https://identitytoolkit.googleapis.com/v1/accounts`;
 const API_KEY   = FIREBASE_CONFIG.apiKey;
 
 // ---- Backend API base URL ----
-// Change this to your deployed backend URL when hosting remotely
-// e.g. "https://your-api.railway.app"
-const API_BASE = 'http://localhost:3001';
+const API_BASE = 'https://emergencias.onrender.com';
 
 // ---- Admin email ----
 const ADMIN_EMAIL = "leandroescorza789@gmail.com";
