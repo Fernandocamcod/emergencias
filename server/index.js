@@ -196,7 +196,8 @@ function rowToAlert(row) {
 }
 
 // ---- Start ----
+console.log(`⏳ Intentando iniciar servidor en puerto ${PORT}...`);
 app.listen(PORT, () => {
-  console.log(`🚀 AlertaEmergencia API running on http://localhost:${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/api/health`);
+  console.log(`🚀 AlertaEmergencia API running on port ${PORT}`);
+  console.log(`   Health: /api/health`);
 });
