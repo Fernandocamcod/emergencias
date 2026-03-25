@@ -162,8 +162,8 @@
       setAlertActive();
       setStatus('success', '🆘 ¡Alerta enviada! Seguimiento activo cada 30 segundos.');
 
-      // Start location tracking and status checking
-      trackingInterval = setInterval(pushLocationUpdate, 5000); // Check/Update every 5s
+      // Start location tracking interval
+      trackingInterval = setInterval(pushLocationUpdate, 30000);
     } catch (err) {
       setSendingState(false);
       setStatus('error', '❌ Error al enviar alerta: ' + err.message);
@@ -174,16 +174,14 @@
     if (!activeAlertId || !gpsReady) return;
     try {
       await getValidToken();
-      const alert = await apiPatch(`/api/alerts/${activeAlertId}`, {
+      const updatedAlert = await apiPatch(`/api/alerts/${activeAlertId}`, {
         lat:    currentLat,
-        lng:    currentLng,
-        status: 'active'
+        lng:    currentLng
       });
       
-      // If server says it's no longer active, reset locally
-      if (alert.status !== 'active' && alert.status !== 'in_progress') {
-        console.log('Alerta terminada por el administrador.');
-        resetUserUI();
+      if (updatedAlert && (updatedAlert.status === 'attended' || updatedAlert.status === 'cancelled')) {
+        stopAlertUI(updatedAlert.status);
+        return;
       }
 
       const now = new Date();
@@ -191,22 +189,6 @@
     } catch (err) {
       console.warn('Tracking update failed:', err.message);
     }
-  }
-
-  function resetUserUI() {
-    clearInterval(trackingInterval);
-    trackingInterval = null;
-    activeAlertId    = null;
-    sosBtnEl.classList.remove('active');
-    sosBtnEl.disabled      = false;
-    sosLabelEl.textContent = 'SOS';
-    sosSubEl.textContent   = 'ENVIAR ALERTA';
-    cancelBtnEl.classList.add('hidden');
-    trackingBar.classList.remove('active-tracking');
-    trackingText.textContent = 'Sin seguimiento activo';
-    msgInput.disabled = false;
-    document.querySelectorAll('.type-btn').forEach(b => b.disabled = false);
-    setStatus('success', '✅ La alerta ha sido atendida o finalizada.');
   }
 
   function setAlertActive() {
@@ -232,6 +214,28 @@
     }
   }
 
+  function stopAlertUI(finalStatus) {
+    clearInterval(trackingInterval);
+    trackingInterval = null;
+    activeAlertId    = null;
+    // Reset UI
+    sosBtnEl.classList.remove('active');
+    sosBtnEl.disabled      = false;
+    sosLabelEl.textContent = 'SOS';
+    sosSubEl.textContent   = 'ENVIAR ALERTA';
+    cancelBtnEl.classList.add('hidden');
+    trackingBar.classList.remove('active-tracking');
+    trackingText.textContent = 'Sin seguimiento activo';
+    msgInput.disabled = false;
+    document.querySelectorAll('.type-btn').forEach(b => b.disabled = false);
+    
+    if (finalStatus === 'attended') {
+      setStatus('success', '✅ Un administrador ha marcado la alerta como ATENDIDA.');
+    } else {
+      setStatus('success', '✅ Alerta cancelada. Puedes enviar una nueva si es necesario.');
+    }
+  }
+
   // ---- CANCEL ALERT ----
   window.handleCancelAlert = async function () {
     if (!activeAlertId) return;
@@ -239,10 +243,10 @@
     try {
       await getValidToken();
       await apiPatch(`/api/alerts/${activeAlertId}`, { status: 'cancelled' });
-      resetUserUI();
     } catch (e) {
       console.warn('Cancel failed:', e.message);
     }
+    stopAlertUI('cancelled');
   };
 
   // ---- Logout ----
