@@ -104,43 +104,55 @@
 
   // ---- Map marker management ----
   function updateMarker(alert) {
-    if (!alert.lat || !alert.lng) return;
-    const pos   = [parseFloat(alert.lat), parseFloat(alert.lng)];
-    const label = getTypeEmoji(alert.type) + ' ' + alert.typeLabel;
-    const time  = alert.timestamp ? new Date(alert.timestamp).toLocaleTimeString() : '';
-
-    const popupContent = `
-      <div class="popup-content">
-        <div class="popup-name">👤 ${escHtml(alert.name || 'Usuario')}</div>
-        <div class="popup-type">${label}</div>
-        <div class="popup-time">⏱️ ${time}</div>
-        ${alert.phone ? `<div style="margin-top:4px;font-size:0.78rem">📞 <a href="tel:${escHtml(alert.phone)}" style="color:#e74c3c">${escHtml(alert.phone)}</a></div>` : ''}
-        ${alert.lowPrecision ? `<div style="margin-top:4px;font-size:0.78rem;color:#f39c12" title="Precisión > 100m">⚠️ Ubicación aproximada (PC/Red)</div>` : ''}
-        ${alert.message ? `<div style="margin-top:4px;font-size:0.78rem;color:#bdc3c7">"${escHtml(alert.message)}"</div>` : ''}
-      </div>
-    `;
-
-    if (markers[alert._id]) {
-      markers[alert._id].setLatLng(pos);
-      if (alert.status === 'cancelled') {
-        map.removeLayer(markers[alert._id]);
-        delete markers[alert._id];
+    try {
+      const lat = parseFloat(alert.lat);
+      const lng = parseFloat(alert.lng);
+      
+      if (isNaN(lat) || isNaN(lng)) {
+        console.warn(`Skipping marker for alert ${alert._id} due to invalid coordinates: (${alert.lat}, ${alert.lng})`);
         return;
       }
-      markers[alert._id].setIcon(makeIcon(alert.status));
-      markers[alert._id].setPopupContent(popupContent);
-    } else if (alert.status !== 'cancelled') {
-      const marker = L.marker(pos, { icon: makeIcon(alert.status) })
-        .addTo(map)
-        .bindPopup(popupContent);
-      markers[alert._id] = marker;
+      
+      const pos   = [lat, lng];
+      const label = getTypeEmoji(alert.type) + ' ' + (alert.typeLabel || alert.type);
+      const time  = alert.timestamp ? new Date(alert.timestamp).toLocaleTimeString() : '';
 
-      if (alert.status === 'active') {
-        map.flyTo(pos, 14, { duration: 1.5 });
-        marker.openPopup();
+      const popupContent = `
+        <div class="popup-content">
+          <div class="popup-name">👤 ${escHtml(alert.name || 'Usuario')}</div>
+          <div class="popup-type">${label}</div>
+          <div class="popup-time">⏱️ ${time}</div>
+          ${alert.phone ? `<div style="margin-top:4px;font-size:0.78rem">📞 <a href="tel:${escHtml(alert.phone)}" style="color:#e74c3c">${escHtml(alert.phone)}</a></div>` : ''}
+          ${alert.lowPrecision ? `<div style="margin-top:4px;font-size:0.78rem;color:#f39c12" title="Precisión > 100m">⚠️ Ubicación aproximada (PC/Red)</div>` : ''}
+          ${alert.message ? `<div style="margin-top:4px;font-size:0.78rem;color:#bdc3c7">"${escHtml(alert.message)}"</div>` : ''}
+        </div>
+      `;
+
+      if (markers[alert._id]) {
+        markers[alert._id].setLatLng(pos);
+        if (alert.status === 'cancelled') {
+          map.removeLayer(markers[alert._id]);
+          delete markers[alert._id];
+          return;
+        }
+        markers[alert._id].setIcon(makeIcon(alert.status));
+        markers[alert._id].setPopupContent(popupContent);
+      } else if (alert.status !== 'cancelled') {
+        const marker = L.marker(pos, { icon: makeIcon(alert.status) })
+          .addTo(map)
+          .bindPopup(popupContent);
+        markers[alert._id] = marker;
+
+        if (alert.status === 'active') {
+          map.flyTo(pos, 14, { duration: 1.5 });
+          marker.openPopup();
+        }
       }
+    } catch (err) {
+      console.error(`Error updating marker for alert ${alert._id}:`, err);
     }
   }
+
 
   // ---- Render alert lists ----
   function renderLists() {
