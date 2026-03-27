@@ -18,6 +18,8 @@
   let geoWatchId      = null;
   let userMap         = null;
   let userMarker      = null;
+  let activeAlertId   = null;
+
 
   // ---- DOM refs ----
   const sosBtnEl     = document.getElementById('sos-btn');

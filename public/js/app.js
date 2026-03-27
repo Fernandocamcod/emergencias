@@ -32,7 +32,7 @@ window.appRouter = {
     }
   },
 
-  navigate: function(sessionData) {
+  navigate: async function(sessionData) {
     if (!sessionData || !sessionData.idToken) {
       this.showView('auth');
       return;
@@ -46,9 +46,22 @@ window.appRouter = {
     }
 
     const decoded = this.parseJwt(sessionData.idToken);
+    let isAdmin = decoded && decoded.admin === true;
+
+    // Fallback: check PostgreSQL database via API if not admin in JWT
+    if (!isAdmin) {
+      try {
+        const profile = await apiGet(`/api/users/${sessionData.uid}`);
+        if (profile && profile.role === 'admin') {
+          isAdmin = true;
+        }
+      } catch (err) {
+        console.warn('Could not verify admin role from API:', err.message);
+      }
+    }
     
-    // Check if it's admin or user. Admin role via Firebase custom claims
-    if (decoded && decoded.admin === true) {
+    // Route based on detected role
+    if (isAdmin) {
       this.showView('admin');
       if (typeof window.initAdminView === 'function') window.initAdminView();
     } else {
@@ -56,6 +69,7 @@ window.appRouter = {
       if (typeof window.initUserView === 'function') window.initUserView();
     }
   }
+
 };
 
 document.addEventListener('DOMContentLoaded', () => {

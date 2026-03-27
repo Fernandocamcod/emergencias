@@ -64,6 +64,8 @@ app.post('/api/users/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
     const { email, name, phone, emergencyContact, role } = req.body;
+    const roleValue = (email && email.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase()) ? 'admin' : (role || 'user');
+
     const r = await pool.query(
       `INSERT INTO users (uid, email, name, phone, emergency_contact, role, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -72,11 +74,12 @@ app.post('/api/users/:uid', async (req, res) => {
          name              = COALESCE(EXCLUDED.name, users.name),
          phone             = COALESCE(EXCLUDED.phone, users.phone),
          emergency_contact = COALESCE(EXCLUDED.emergency_contact, users.emergency_contact),
-         role              = COALESCE(EXCLUDED.role, users.role),
+         role              = EXCLUDED.role,
          updated_at        = NOW()
        RETURNING *`,
-      [uid, email, name || null, phone || null, emergencyContact || null, role || 'user']
+      [uid, email, name || null, phone || null, emergencyContact || null, roleValue]
     );
+
     res.json(rowToUser(r.rows[0]));
   } catch (err) {
     console.error('POST /api/users/:uid', err.message);
