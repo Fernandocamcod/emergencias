@@ -210,17 +210,17 @@
         ${alert.lat ? `<div class="alert-coords">📍 ${parseFloat(alert.lat).toFixed(5)}, ${parseFloat(alert.lng).toFixed(5)}</div>` : ''}
         ${alert.lowPrecision ? `<div style="font-size:0.75rem;color:#f39c12;margin-top:4px;font-weight:bold" title="Precisión > 100m">⚠️ Ubicación aproximada (PC/Red)</div>` : ''}
         ${alert.message ? `<div class="alert-message">"${escHtml(alert.message)}"</div>` : ''}
-        
-        <div class="alert-emergency-box" style="margin-top:0.8rem; padding:0.6rem; background:rgba(231,76,60,0.1); border-radius:8px; border:1px solid rgba(231,76,60,0.2)">
-          <div style="font-size:0.75rem; color:var(--grey-mid); margin-bottom:0.3rem">CONTACTO DE EMERGENCIA:</div>
-          <div style="font-weight:bold; font-size:0.9rem">👤 ${escHtml(alert.emergencyContactName || 'N/A')}</div>
-          ${alert.emergencyContactPhone ? `<a href="tel:${escHtml(alert.emergencyContactPhone)}" style="color:var(--red-light); font-size:0.85rem; text-decoration:none; display:block; margin-top:0.2rem">📞 ${escHtml(alert.emergencyContactPhone)}</a>` : '<div style="font-size:0.85rem; color:var(--grey-mid)">📞 No provisto</div>'}
+
+        <div class="alert-emergency-box" style="margin-top:0.8rem; padding:0.8rem; background:rgba(231,76,60,0.15); border-radius:12px; border:2px dashed rgba(231,76,60,0.3)">
+          <div style="font-size:0.7rem; color:var(--red-light); font-weight:700; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em">🚨 Contacto de Emergencia</div>
+          <div style="font-weight:bold; font-size:1.05rem; color:var(--white); margin-bottom:0.3rem">${escHtml(alert.emergencyContactName || 'No especificado')}</div>
+          ${alert.emergencyContactPhone ? `<a href="tel:${escHtml(alert.emergencyContactPhone)}" style="color:var(--red-light); font-size:1rem; text-decoration:none; display:flex; align-items:center; gap:0.5rem; font-weight:600"><span>📞</span> ${escHtml(alert.emergencyContactPhone)}</a>` : '<div style="font-size:0.9rem; color:var(--grey-mid)">📞 No provisto</div>'}
         </div>
 
-        <div class="alert-actions" style="margin-top:1rem">
-          ${alert.phone ? `<a href="tel:${escHtml(alert.phone)}" class="btn btn-secondary btn-sm" title="Llamar al usuario">📞 Usuario</a>` : ''}
-          ${alert.status !== 'in_progress' ? `<button class="btn btn-warning btn-sm" onclick="updateStatus(event,'${alert._id}','in_progress')">⏳ Proceso</button>` : ''}
-          <button class="btn btn-success btn-sm" onclick="updateStatus(event,'${alert._id}','attended')">✅ OK</button>
+        <div class="alert-actions" style="margin-top:1.2rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem">
+          ${alert.phone ? `<a href="tel:${escHtml(alert.phone)}" class="btn btn-secondary btn-sm" style="flex:1" title="Llamar al usuario">Llamar Usuario</a>` : ''}
+          <button class="btn btn-warning btn-sm" style="flex:1" onclick="updateStatus(event,'${alert._id}', 'in_progress')">⏳ Proceso</button>
+          <button class="btn btn-success btn-sm" style="flex:1" onclick="updateStatus(event,'${alert._id}','attended')">✅ OK</button>
         </div>
       </div>`;
   }

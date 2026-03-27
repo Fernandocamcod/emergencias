@@ -72,25 +72,30 @@
       </button>
       <!-- GOOGLE COMPLETE PROFILE -->
       <form class="auth-form hidden" id="form-google-complete" onsubmit="handleGoogleComplete(event)">
-        <p style="font-size:0.88rem;color:var(--grey-mid);margin-bottom:1rem;text-align:center;">
-          ¡Bienvenido! Por favor completa tus datos para continuar.
+        <h2 style="text-align:center; margin-bottom:0.5rem; color:var(--white)">Termina tu registro</h2>
+        <p style="font-size:0.88rem;color:var(--grey-mid);margin-bottom:1.5rem;text-align:center;">
+          Para poder usar el botón SOS, necesitamos tu contacto de emergencia.
         </p>
+        
         <div class="form-group">
-          <label for="g-phone">Tu teléfono</label>
+          <label for="g-phone">Tu número de teléfono</label>
           <input type="tel" id="g-phone" class="form-input" placeholder="+593..." required />
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-          <div class="form-group" style="margin-bottom:0">
-            <label for="g-contact-name">Contacto: Nombre</label>
-            <input type="text" id="g-contact-name" class="form-input" placeholder="Nombre contacto" required />
+
+        <div style="margin-top:1.5rem; padding:1rem; border:1px dashed var(--grey); border-radius:12px">
+          <p style="font-size:0.75rem; font-weight:700; color:var(--red-light); margin-bottom:1rem; text-transform:uppercase">Contacto de Emergencia</p>
+          <div class="form-group">
+            <label for="g-contact-name">Nombre completo del contacto</label>
+            <input type="text" id="g-contact-name" class="form-input" placeholder="Nombre" required />
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label for="g-contact-phone">Contacto: Teléfono</label>
+            <label for="g-contact-phone">Teléfono del contacto</label>
             <input type="tel" id="g-contact-phone" class="form-input" placeholder="Teléfono" required />
           </div>
         </div>
+
         <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.5rem">
-          Finalizar registro
+          Guardar y continuar
         </button>
       </form>
     </form>

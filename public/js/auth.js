@@ -146,6 +146,7 @@
       const sData = {
         uid:          user.uid,
         email:        user.email,
+        name:         user.displayName || '',
         idToken:      await user.getIdToken(),
         refreshToken: user.refreshToken,
         expiresAt:    Date.now() + 3600000
@@ -160,7 +161,7 @@
         console.log('New Google user, profile incomplete.');
       }
 
-      if (!profile || !profile.phone || !profile.emergencyContactPhone) {
+      if (!profile || !profile.phone || !profile.emergencyContactName || !profile.emergencyContactPhone) {
         // Show "Complete Profile" form
         document.getElementById('form-login').classList.add('hidden');
         document.getElementById('form-register').classList.add('hidden');
@@ -191,6 +192,7 @@
       await apiPost(`/api/users/${session.uid}`, {
         uid:              session.uid,
         email:            session.email,
+        name:             session.name || '',
         phone:            phone,
         emergencyContactName:  contactName,
         emergencyContactPhone: contactPhone,
