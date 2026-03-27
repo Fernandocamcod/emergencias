@@ -314,11 +314,23 @@
 
   // ---- INIT ----
   window.initAdminView = function() {
-    if (!map) initMap();
-    pollAlerts();
-    if (!pollInterval) {
-      pollInterval = setInterval(pollAlerts, 5000); // poll every 5 seconds
+    console.log('--- ADMIN VIEW INIT ---');
+    try {
+      if (!map) {
+        console.log('Initializing admin map...');
+        initMap();
+      }
+      
+      pollAlerts();
+      
+      if (!pollInterval) {
+        console.log('Starting alert polling...');
+        pollInterval = setInterval(pollAlerts, 5000);
+      }
+    } catch (err) {
+      console.error('Fatal error in initAdminView:', err);
     }
   };
 
 })();
+

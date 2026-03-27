@@ -47,18 +47,23 @@ window.appRouter = {
 
     const decoded = this.parseJwt(sessionData.idToken);
     let isAdmin = decoded && decoded.admin === true;
+    console.log('Role from JWT:', isAdmin ? 'admin' : 'user');
 
     // Fallback: check PostgreSQL database via API if not admin in JWT
     if (!isAdmin) {
+      console.log('No admin claim in JWT. Checking PostgreSQL API for email:', sessionData.email);
       try {
         const profile = await apiGet(`/api/users/${sessionData.uid}`);
+        console.log('Profile from API:', profile);
         if (profile && profile.role === 'admin') {
           isAdmin = true;
+          console.log('Admin role confirmed from API fallback.');
         }
       } catch (err) {
         console.warn('Could not verify admin role from API:', err.message);
       }
     }
+
     
     // Route based on detected role
     if (isAdmin) {
