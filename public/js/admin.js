@@ -17,7 +17,7 @@
   let isFirstLoadAdmin = true;
 
   // ---- DOM refs ----
-  let alertsList, historyList, emptyActive, emptyHistory, activeCount, statActive, statDone, toastContainer;
+  let alertsList, historyList, emptyActive, emptyHistory, activeCount, statActive, statDone, statCancelled, statName, toastContainer;
 
   function initElements() {
     alertsList     = document.getElementById('alerts-list');
@@ -27,6 +27,8 @@
     activeCount    = document.getElementById('active-count');
     statActive     = document.getElementById('stat-active');
     statDone       = document.getElementById('stat-done');
+    statCancelled  = document.getElementById('stat-cancelled');
+    statName       = document.getElementById('admin-name-display');
     toastContainer = document.getElementById('toast-container');
   }
 
@@ -217,10 +219,11 @@
           ${alert.emergencyContactPhone ? `<a href="tel:${escHtml(alert.emergencyContactPhone)}" style="color:var(--red-light); font-size:1rem; text-decoration:none; display:flex; align-items:center; gap:0.5rem; font-weight:600"><span>📞</span> ${escHtml(alert.emergencyContactPhone)}</a>` : '<div style="font-size:0.9rem; color:var(--grey-mid)">📞 No provisto</div>'}
         </div>
 
-        <div class="alert-actions" style="margin-top:1.2rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem">
-          ${alert.phone ? `<a href="tel:${escHtml(alert.phone)}" class="btn btn-secondary btn-sm" style="flex:1" title="Llamar al usuario">Llamar Usuario</a>` : ''}
-          <button class="btn btn-warning btn-sm" style="flex:1" onclick="updateStatus(event,'${alert._id}', 'in_progress')">⏳ Proceso</button>
-          <button class="btn btn-success btn-sm" style="flex:1" onclick="updateStatus(event,'${alert._id}','attended')">✅ OK</button>
+        <div class="alert-actions" style="margin-top:1.2rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem; display:grid; grid-template-columns:1fr 1fr; gap:0.5rem">
+          ${alert.phone ? `<a href="tel:${escHtml(alert.phone)}" class="btn btn-secondary btn-sm" style="grid-column: span 2" title="Llamar al usuario">Llamar Usuario</a>` : ''}
+          <button class="btn btn-warning btn-sm" onclick="updateStatus(event,'${alert._id}', 'in_progress')">⏳ Proceso</button>
+          <button class="btn btn-success btn-sm" onclick="updateStatus(event,'${alert._id}','attended')">✅ OK</button>
+          <button class="btn btn-danger btn-sm" style="grid-column: span 2; background:rgba(231,76,60,0.2); color:#e74c3c" onclick="updateStatus(event,'${alert._id}','cancelled')">❌ Cancelar (Falsa)</button>
         </div>
       </div>`;
   }
@@ -229,7 +232,7 @@
     const time  = alert.timestamp ? new Date(alert.timestamp).toLocaleString('es') : '';
     const badge = alert.status === 'attended'
       ? '<span class="badge badge-done">Atendida</span>'
-      : '<span class="badge" style="background:rgba(149,165,166,0.2);color:#95a5a6;border:1px solid rgba(149,165,166,0.3)">Cancelada</span>';
+      : '<span class="badge" style="background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.2)">Falsa / Cancelada</span>';
     return `
       <div class="alert-card" style="opacity:0.7">
         <div class="alert-card-header">
@@ -243,10 +246,13 @@
   }
 
   function updateStats() {
-    const active = Object.values(allAlerts).filter(a => a.status === 'active' || a.status === 'in_progress').length;
-    const done   = Object.values(allAlerts).filter(a => a.status === 'attended').length;
-    statActive.textContent = active + ' activa' + (active !== 1 ? 's' : '');
-    statDone.textContent   = done + ' atendida' + (done !== 1 ? 's' : '');
+    const active    = Object.values(allAlerts).filter(a => a.status === 'active' || a.status === 'in_progress').length;
+    const done      = Object.values(allAlerts).filter(a => a.status === 'attended').length;
+    const cancelled = Object.values(allAlerts).filter(a => a.status === 'cancelled').length;
+    
+    statActive.textContent    = active + ' activa' + (active !== 1 ? 's' : '');
+    statDone.textContent      = done   + ' atendida' + (done !== 1 ? 's' : '');
+    statCancelled.textContent = cancelled + ' falsa' + (cancelled !== 1 ? 's' : '');
     const session = getSession();
     document.getElementById('admin-name-display').textContent = session && session.email ? session.email.split('@')[0] : 'Admin';
   }
