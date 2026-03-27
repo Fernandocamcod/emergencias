@@ -71,19 +71,28 @@ window.appRouter = {
     let isAdmin = decoded && decoded.admin === true;
     console.log('Role from JWT:', isAdmin ? 'admin' : 'user');
 
-    // Fallback: check PostgreSQL database via API if not admin in JWT
-    if (!isAdmin) {
-      console.log('No admin claim in JWT. Checking PostgreSQL API for email:', sessionData.email);
-      try {
-        const profile = await apiGet(`/api/users/${sessionData.uid}`);
-        console.log('Profile from API:', profile);
-        if (profile && profile.role === 'admin') {
-          isAdmin = true;
-          console.log('Admin role confirmed from API fallback.');
+    // Enforce profile completion (mandatory for all users)
+    console.log('Verifying profile completeness...');
+    try {
+      const profile = await apiGet(`/api/users/${sessionData.uid}`);
+      console.log('Profile from API:', profile);
+      
+      const isIncomplete = !profile || !profile.phone || !profile.emergencyContactName || !profile.emergencyContactPhone;
+      
+      if (isIncomplete && profile?.role !== 'admin') {
+        console.warn('Profile incomplete. Redirecting to completion form.');
+        await this.showView('auth');
+        if (typeof window.showGoogleComplete === 'function') {
+          window.showGoogleComplete();
         }
-      } catch (err) {
-        console.warn('Could not verify admin role from API:', err.message);
+        return;
       }
+      
+      if (profile && profile.role === 'admin') {
+        isAdmin = true;
+      }
+    } catch (err) {
+      console.warn('Could not verify profile/role from API:', err.message);
     }
 
     

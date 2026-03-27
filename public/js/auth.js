@@ -178,6 +178,20 @@
     }
   };
 
+  // ---- HELPER FOR ROUTER ----
+  window.showGoogleComplete = function() {
+    // Small delay to ensure SPA has finished injecting auth.html
+    setTimeout(() => {
+      const gForm = document.getElementById('form-google-complete');
+      if (gForm) {
+        document.getElementById('form-login').classList.add('hidden');
+        document.getElementById('form-register').classList.add('hidden');
+        document.querySelector('.auth-tabs').classList.add('hidden');
+        gForm.classList.remove('hidden');
+      }
+    }, 100);
+  };
+
   // ---- GOOGLE COMPLETE ----
   window.handleGoogleComplete = async function (e) {
     e.preventDefault();
