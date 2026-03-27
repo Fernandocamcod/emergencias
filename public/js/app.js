@@ -68,6 +68,11 @@ window.appRouter = {
       this.showView('user');
       if (typeof window.initUserView === 'function') window.initUserView();
     }
+  },
+
+  logout: function() {
+    if (typeof clearSession === 'function') clearSession();
+    this.showView('auth');
   }
 
 };
