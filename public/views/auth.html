@@ -49,9 +49,15 @@
           <input type="tel" id="reg-phone" class="form-input" placeholder="+593..." required />
         </div>
       </div>
-      <div class="form-group" style="margin-top:0.75rem">
-        <label for="reg-contact">Contacto de emergencia</label>
-        <input type="text" id="reg-contact" class="form-input" placeholder="Nombre y teléfono" required />
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.75rem">
+        <div class="form-group" style="margin-bottom:0">
+          <label for="reg-contact-name">Contacto: Nombre</label>
+          <input type="text" id="reg-contact-name" class="form-input" placeholder="Nombre contacto" required />
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label for="reg-contact-phone">Contacto: Teléfono</label>
+          <input type="tel" id="reg-contact-phone" class="form-input" placeholder="Teléfono" required />
+        </div>
       </div>
       <div class="form-group">
         <label for="reg-email">Correo electrónico</label>
@@ -64,9 +70,29 @@
       <button type="submit" class="btn btn-primary btn-full" id="register-btn">
         <span id="register-btn-text">Crear cuenta</span>
       </button>
-      <p style="font-size:0.75rem;color:var(--grey-mid);margin-top:0.75rem;text-align:center;">
-        ⚠️ Las cuentas de administrador son asignadas directamente por el sistema.
-      </p>
+      <!-- GOOGLE COMPLETE PROFILE -->
+      <form class="auth-form hidden" id="form-google-complete" onsubmit="handleGoogleComplete(event)">
+        <p style="font-size:0.88rem;color:var(--grey-mid);margin-bottom:1rem;text-align:center;">
+          ¡Bienvenido! Por favor completa tus datos para continuar.
+        </p>
+        <div class="form-group">
+          <label for="g-phone">Tu teléfono</label>
+          <input type="tel" id="g-phone" class="form-input" placeholder="+593..." required />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div class="form-group" style="margin-bottom:0">
+            <label for="g-contact-name">Contacto: Nombre</label>
+            <input type="text" id="g-contact-name" class="form-input" placeholder="Nombre contacto" required />
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label for="g-contact-phone">Contacto: Teléfono</label>
+            <input type="tel" id="g-contact-phone" class="form-input" placeholder="Teléfono" required />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:1.5rem">
+          Finalizar registro
+        </button>
+      </form>
     </form>
   </div>
 

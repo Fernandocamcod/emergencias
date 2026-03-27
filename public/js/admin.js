@@ -210,10 +210,17 @@
         ${alert.lat ? `<div class="alert-coords">📍 ${parseFloat(alert.lat).toFixed(5)}, ${parseFloat(alert.lng).toFixed(5)}</div>` : ''}
         ${alert.lowPrecision ? `<div style="font-size:0.75rem;color:#f39c12;margin-top:4px;font-weight:bold" title="Precisión > 100m">⚠️ Ubicación aproximada (PC/Red)</div>` : ''}
         ${alert.message ? `<div class="alert-message">"${escHtml(alert.message)}"</div>` : ''}
-        <div class="alert-actions">
-          ${alert.phone ? `<a href="tel:${escHtml(alert.phone)}" class="btn btn-secondary btn-sm" title="Llamar">📞 ${escHtml(alert.phone)}</a>` : ''}
-          ${alert.status !== 'in_progress' ? `<button class="btn btn-warning btn-sm" onclick="updateStatus(event,'${alert._id}','in_progress')">⏳ En proceso</button>` : ''}
-          <button class="btn btn-success btn-sm" onclick="updateStatus(event,'${alert._id}','attended')">✅ Atendida</button>
+        
+        <div class="alert-emergency-box" style="margin-top:0.8rem; padding:0.6rem; background:rgba(231,76,60,0.1); border-radius:8px; border:1px solid rgba(231,76,60,0.2)">
+          <div style="font-size:0.75rem; color:var(--grey-mid); margin-bottom:0.3rem">CONTACTO DE EMERGENCIA:</div>
+          <div style="font-weight:bold; font-size:0.9rem">👤 ${escHtml(alert.emergencyContactName || 'N/A')}</div>
+          ${alert.emergencyContactPhone ? `<a href="tel:${escHtml(alert.emergencyContactPhone)}" style="color:var(--red-light); font-size:0.85rem; text-decoration:none; display:block; margin-top:0.2rem">📞 ${escHtml(alert.emergencyContactPhone)}</a>` : '<div style="font-size:0.85rem; color:var(--grey-mid)">📞 No provisto</div>'}
+        </div>
+
+        <div class="alert-actions" style="margin-top:1rem">
+          ${alert.phone ? `<a href="tel:${escHtml(alert.phone)}" class="btn btn-secondary btn-sm" title="Llamar al usuario">📞 Usuario</a>` : ''}
+          ${alert.status !== 'in_progress' ? `<button class="btn btn-warning btn-sm" onclick="updateStatus(event,'${alert._id}','in_progress')">⏳ Proceso</button>` : ''}
+          <button class="btn btn-success btn-sm" onclick="updateStatus(event,'${alert._id}','attended')">✅ OK</button>
         </div>
       </div>`;
   }

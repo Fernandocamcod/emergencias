@@ -13,6 +13,8 @@
     document.getElementById('tab-register').classList.toggle('active', tab === 'register');
     document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
     document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+    document.getElementById('form-google-complete').classList.add('hidden');
+    document.querySelector('.auth-tabs').classList.remove('hidden');
   };
 
   function showError(formId, msg) {
@@ -85,13 +87,12 @@
     e.preventDefault();
     hideError('register');
 
-    const name    = document.getElementById('reg-name').value.trim();
-    const phone   = document.getElementById('reg-phone').value.trim();
-    const contact = document.getElementById('reg-contact').value.trim();
-    const email   = document.getElementById('reg-email').value.trim().toLowerCase();
-    const password = document.getElementById('reg-password').value;
-
-    // Allow any email to register, but admin role enforcement happens on the backend/token
+    const name          = document.getElementById('reg-name').value.trim();
+    const phone         = document.getElementById('reg-phone').value.trim();
+    const contactName   = document.getElementById('reg-contact-name').value.trim();
+    const contactPhone  = document.getElementById('reg-contact-phone').value.trim();
+    const email         = document.getElementById('reg-email').value.trim().toLowerCase();
+    const password      = document.getElementById('reg-password').value;
 
     setLoading('register', true);
     try {
@@ -112,12 +113,12 @@
           email:            email,
           name:             name,
           phone:            phone,
-          emergencyContact: contact,
+          emergencyContactName:  contactName,
+          emergencyContactPhone: contactPhone,
           role:             'user'
         });
       } catch (apiErr) {
         console.warn('Could not save profile to API:', apiErr.message);
-        // Continue anyway — user is created in Firebase Auth
       }
 
       redirectByRole(data.email);
@@ -151,24 +152,53 @@
       };
       saveSession(sData);
 
-      // Ensure profile exists in PostgreSQL (upsert — safe to call every time)
+      // Check if profile is complete
+      let profile = null;
       try {
-        await apiPost(`/api/users/${user.uid}`, {
-          uid:              user.uid,
-          email:            user.email,
-          name:             user.displayName || '',
-          phone:            '',
-          emergencyContact: '',
-          role:             'user'
-        });
-      } catch (apiErr) {
-        console.warn('Profile sync failed:', apiErr.message);
+        profile = await apiGet(`/api/users/${user.uid}`);
+      } catch (e) {
+        console.log('New Google user, profile incomplete.');
+      }
+
+      if (!profile || !profile.phone || !profile.emergencyContactPhone) {
+        // Show "Complete Profile" form
+        document.getElementById('form-login').classList.add('hidden');
+        document.getElementById('form-register').classList.add('hidden');
+        document.querySelector('.auth-tabs').classList.add('hidden');
+        document.getElementById('form-google-complete').classList.remove('hidden');
+        btn.disabled = false;
+        return;
       }
 
       redirectByRole(user.email);
     } catch (err) {
       showError('login', err.message);
       btn.disabled = false;
+    }
+  };
+
+  // ---- GOOGLE COMPLETE ----
+  window.handleGoogleComplete = async function (e) {
+    e.preventDefault();
+    const session = getSession();
+    if (!session) return;
+
+    const phone         = document.getElementById('g-phone').value.trim();
+    const contactName   = document.getElementById('g-contact-name').value.trim();
+    const contactPhone  = document.getElementById('g-contact-phone').value.trim();
+
+    try {
+      await apiPost(`/api/users/${session.uid}`, {
+        uid:              session.uid,
+        email:            session.email,
+        phone:            phone,
+        emergencyContactName:  contactName,
+        emergencyContactPhone: contactPhone,
+        role:             'user'
+      });
+      redirectByRole(session.email);
+    } catch (err) {
+      alert('Error al guardar datos: ' + err.message);
     }
   };
 

@@ -63,21 +63,22 @@ app.get('/api/users/:uid', async (req, res) => {
 app.post('/api/users/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
-    const { email, name, phone, emergencyContact, role } = req.body;
+    const { email, name, phone, emergencyContactName, emergencyContactPhone, role } = req.body;
     const roleValue = (email && email.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase()) ? 'admin' : (role || 'user');
 
     const r = await pool.query(
-      `INSERT INTO users (uid, email, name, phone, emergency_contact, role, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      `INSERT INTO users (uid, email, name, phone, emergency_contact_name, emergency_contact_phone, role, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
        ON CONFLICT (uid) DO UPDATE SET
          email             = EXCLUDED.email,
          name              = COALESCE(EXCLUDED.name, users.name),
          phone             = COALESCE(EXCLUDED.phone, users.phone),
-         emergency_contact = COALESCE(EXCLUDED.emergency_contact, users.emergency_contact),
+         emergency_contact_name = COALESCE(EXCLUDED.emergency_contact_name, users.emergency_contact_name),
+         emergency_contact_phone = COALESCE(EXCLUDED.emergency_contact_phone, users.emergency_contact_phone),
          role              = EXCLUDED.role,
          updated_at        = NOW()
        RETURNING *`,
-      [uid, email, name || null, phone || null, emergencyContact || null, roleValue]
+      [uid, email, name || null, phone || null, emergencyContactName || null, emergencyContactPhone || null, roleValue]
     );
 
     res.json(rowToUser(r.rows[0]));
@@ -106,16 +107,16 @@ app.get('/api/alerts', async (req, res) => {
 app.post('/api/alerts', async (req, res) => {
   try {
     const {
-      uid, email, name, phone, emergencyContact,
+      uid, email, name, phone, emergencyContactName, emergencyContactPhone,
       type, typeLabel, message, lat, lng, status
     } = req.body;
 
     const r = await pool.query(
       `INSERT INTO alerts
-         (uid, email, name, phone, emergency_contact, type, type_label, message, lat, lng, status, timestamp, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),NOW())
+         (uid, email, name, phone, emergency_contact_name, emergency_contact_phone, type, type_label, message, lat, lng, status, timestamp, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW())
        RETURNING *`,
-      [uid, email, name, phone || null, emergencyContact || null,
+      [uid, email, name, phone || null, emergencyContactName || null, emergencyContactPhone || null,
        type, typeLabel, message || null,
        lat != null ? lat : null, lng != null ? lng : null,
        status || 'active']
@@ -168,33 +169,35 @@ app.patch('/api/alerts/:id', async (req, res) => {
 
 function rowToUser(row) {
   return {
-    uid:              row.uid,
-    email:            row.email,
-    name:             row.name,
-    phone:            row.phone,
-    emergencyContact: row.emergency_contact,
-    role:             row.role,
-    createdAt:        row.created_at,
-    updatedAt:        row.updated_at,
+    uid:                    row.uid,
+    email:                  row.email,
+    name:                   row.name,
+    phone:                  row.phone,
+    emergencyContactName:   row.emergency_contact_name,
+    emergencyContactPhone:  row.emergency_contact_phone,
+    role:                   row.role,
+    createdAt:              row.created_at,
+    updatedAt:              row.updated_at,
   };
 }
 
 function rowToAlert(row) {
   return {
-    _id:              row.id,
-    uid:              row.uid,
-    email:            row.email,
-    name:             row.name,
-    phone:            row.phone,
-    emergencyContact: row.emergency_contact,
-    type:             row.type,
-    typeLabel:        row.type_label,
-    message:          row.message,
-    lat:              row.lat,
-    lng:              row.lng,
-    status:           row.status,
-    timestamp:        row.timestamp,
-    updatedAt:        row.updated_at,
+    _id:                    row.id,
+    uid:                    row.uid,
+    email:                  row.email,
+    name:                   row.name,
+    phone:                  row.phone,
+    emergencyContactName:   row.emergency_contact_name,
+    emergencyContactPhone:  row.emergency_contact_phone,
+    type:                   row.type,
+    typeLabel:              row.type_label,
+    message:                row.message,
+    lat:                    row.lat,
+    lng:                    row.lng,
+    status:                 row.status,
+    timestamp:              row.timestamp,
+    updatedAt:              row.updated_at,
   };
 }
 

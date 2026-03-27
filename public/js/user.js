@@ -13,6 +13,7 @@
   let selectedType    = null;
   let currentAcc      = 0;
   let isLowPrecision  = false;
+  let isManualAdjustment = false;
   let trackingInterval = null;
   let userProfile     = null;
   let geoWatchId      = null;
@@ -89,9 +90,11 @@
   }
 
   function onGPSSuccess(pos) {
-    currentLat = pos.coords.latitude;
-    currentLng = pos.coords.longitude;
-    currentAcc = pos.coords.accuracy;
+    if (isManualAdjustment) return; // Skip auto-updates if user adjusted manually
+    const { latitude, longitude, accuracy } = pos.coords;
+    currentLat = latitude;
+    currentLng = longitude;
+    currentAcc = accuracy;
     isLowPrecision = currentAcc > 100;
 
     gpsReady   = true;
@@ -159,6 +162,7 @@
         const position = marker.getLatLng();
         currentLat = position.lat;
         currentLng = position.lng;
+        isManualAdjustment = true; // Flag to stop auto-updates
         console.log('Manual GPS adjustment:', currentLat, currentLng);
       });
     }, 100);
@@ -202,7 +206,8 @@
         email:            getSession().email,
         name:             userProfile?.name || getSession().email.split('@')[0],
         phone:            userProfile?.phone || '',
-        emergencyContact: userProfile?.emergencyContact || '',
+        emergencyContactName:  userProfile?.emergencyContactName || '',
+        emergencyContactPhone: userProfile?.emergencyContactPhone || '',
         type:             selectedType,
         typeLabel:        getTypeLabel(selectedType),
         message:          msgInput.value.trim(),
