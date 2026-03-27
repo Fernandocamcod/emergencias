@@ -22,19 +22,23 @@
 
 
   // ---- DOM refs ----
-  const sosBtnEl     = document.getElementById('sos-btn');
-  const sosLabelEl   = document.getElementById('sos-label');
-  const sosSubEl     = document.getElementById('sos-sub');
-  const cancelBtnEl  = document.getElementById('cancel-btn');
-  const trackingBar  = document.getElementById('tracking-bar');
-  const trackingText = document.getElementById('tracking-text');
-  const statusBar    = document.getElementById('status-bar');
-  const statusText   = document.getElementById('status-text');
-  const gpsDot       = document.getElementById('gps-status-dot');
-  const gpsTextEl    = document.getElementById('gps-status-text');
-  const nameEl       = document.getElementById('user-display-name');
-  const msgInput     = document.getElementById('msg-input');
-  const userMapZone  = document.getElementById('user-map-zone');
+  let sosBtnEl, sosLabelEl, sosSubEl, cancelBtnEl, trackingBar, trackingText, statusBar, statusText, gpsDot, gpsTextEl, nameEl, msgInput, userMapZone;
+
+  function initElements() {
+    sosBtnEl     = document.getElementById('sos-btn');
+    sosLabelEl   = document.getElementById('sos-label');
+    sosSubEl     = document.getElementById('sos-sub');
+    cancelBtnEl  = document.getElementById('cancel-btn');
+    trackingBar  = document.getElementById('tracking-bar');
+    trackingText = document.getElementById('tracking-text');
+    statusBar    = document.getElementById('status-bar');
+    statusText   = document.getElementById('status-text');
+    gpsDot       = document.getElementById('gps-status-dot');
+    gpsTextEl    = document.getElementById('gps-status-text');
+    nameEl       = document.getElementById('user-display-name');
+    msgInput     = document.getElementById('msg-input');
+    userMapZone  = document.getElementById('user-map-zone');
+  }
 
   // ---- Token management (refresh if needed) ----
   async function getValidToken() {
@@ -316,6 +320,7 @@
 
   // ---- INIT ----
   window.initUserView = function() {
+    initElements();
     loadProfile();
     startGPS();
   };

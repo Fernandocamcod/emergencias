@@ -1,0 +1,91 @@
+<div class="user-bg">
+    <!-- HEADER -->
+    <header class="user-header">
+      <div class="logo">🆘 <span>Alerta</span>Emergencia</div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div class="user-info-bar">
+          <div class="gps-dot searching" id="gps-status-dot"></div>
+          <span id="gps-status-text">Buscando GPS...</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="handleLogout()">Salir</button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="user-main">
+
+      <!-- USER GREETING -->
+      <div style="text-align:center;width:100%;max-width:380px">
+        <p style="color:var(--grey-mid);font-size:0.88rem">Hola, <strong id="user-display-name" style="color:var(--white)">Usuario</strong></p>
+      </div>
+
+      <!-- STATUS BAR -->
+      <div class="status-bar warning" id="status-bar">
+        <span>📡</span>
+        <span id="status-text">Obteniendo tu ubicación GPS...</span>
+      </div>
+
+      <!-- EMERGENCY TYPE SELECTION -->
+      <div style="width:100%;max-width:380px">
+        <p class="section-title">Tipo de emergencia</p>
+        <div class="emergency-types">
+          <button class="type-btn" id="type-fisica" onclick="selectType('fisica', this)">
+            <span class="type-icon">⚠️</span>
+            Peligro físico
+          </button>
+          <button class="type-btn" id="type-accidente" onclick="selectType('accidente', this)">
+            <span class="type-icon">🚗</span>
+            Accidente
+          </button>
+          <button class="type-btn" id="type-medica" onclick="selectType('medica', this)">
+            <span class="type-icon">🏥</span>
+            Emergencia médica
+          </button>
+          <button class="type-btn" id="type-otro" onclick="selectType('otro', this)">
+            <span class="type-icon">🔴</span>
+            Otro
+          </button>
+        </div>
+      </div>
+
+      <!-- MANUAL GPS ADJUSTMENT MAP (Hidden by default) -->
+      <div id="user-map-zone" class="hidden" style="width:100%; max-width:380px; margin-top:1rem;">
+        <p class="section-title">Ajuste manual (PC/Baja precisión)</p>
+        <p style="font-size:0.75rem; color:var(--warning); margin-bottom:0.5rem;">Arrastra el marcador rojo a tu ubicación exacta.</p>
+        <div id="user-map-container" style="width:100%; height:200px; border-radius:12px; overflow:hidden; border:1px solid var(--grey); position:relative;">
+          <div id="user-map" style="width:100%; height:100%;"></div>
+        </div>
+      </div>
+
+      <!-- SOS BUTTON ZONE -->
+      <div class="sos-zone">
+        <p class="section-title" style="text-align:center">Presiona para enviar alerta</p>
+        <div class="sos-wrapper" id="sos-wrapper">
+          <div class="sos-ring" id="sos-ring"></div>
+          <div class="sos-ring2" id="sos-ring2"></div>
+          <button class="sos-btn" id="sos-btn" onclick="handleSOS()">
+            <span id="sos-label">SOS</span>
+            <span class="sos-sub" id="sos-sub">ENVIAR ALERTA</span>
+          </button>
+        </div>
+
+        <!-- Tracking bar (shown when alert is active) -->
+        <div class="tracking-bar" id="tracking-bar">
+          <div class="track-dot"></div>
+          <span id="tracking-text">Sin seguimiento activo</span>
+        </div>
+
+        <!-- Cancel button (shown when alert is active) -->
+        <button class="cancel-alert-btn hidden" id="cancel-btn" onclick="handleCancelAlert()">
+          ✕ Cancelar alerta activa
+        </button>
+      </div>
+
+      <!-- OPTIONAL MESSAGE -->
+      <div class="optional-msg">
+        <p class="section-title">Mensaje adicional (opcional)</p>
+        <textarea id="msg-input" class="form-input" placeholder="Describe la situación brevemente..." maxlength="300"></textarea>
+      </div>
+
+    </main>
+</div>

@@ -12,11 +12,33 @@ window.appRouter = {
     }
   },
 
-  showView: function(viewId) {
+  showView: async function(viewId) {
+    await this.loadView(viewId);
     document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
     const view = document.getElementById('view-' + viewId);
     if (view) view.classList.add('active');
     this.currentView = viewId;
+  },
+
+  loadView: async function(viewId) {
+    const container = document.getElementById('view-' + viewId);
+    if (!container) return;
+    if (container.innerHTML.trim() !== '') return; // Already loaded
+
+    try {
+      console.log(`Loading view: ${viewId}...`);
+      const response = await fetch(`views/${viewId}.html`);
+      if (!response.ok) throw new Error(`Failed to load ${viewId}.html`);
+      const html = await response.text();
+      container.innerHTML = html;
+    } catch (err) {
+      console.error('Error loading view:', err);
+      container.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--red-light)">
+        <h3>Error al cargar la vista</h3>
+        <p>${err.message}</p>
+        <button class="btn btn-secondary" onclick="location.reload()">Reintentar</button>
+      </div>`;
+    }
   },
 
   parseJwt: function(token) {
@@ -34,14 +56,14 @@ window.appRouter = {
 
   navigate: async function(sessionData) {
     if (!sessionData || !sessionData.idToken) {
-      this.showView('auth');
+      await this.showView('auth');
       return;
     }
     
     // Check token expiration
     if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
       if (typeof clearSession === 'function') clearSession();
-      this.showView('auth');
+      await this.showView('auth');
       return;
     }
 
@@ -67,17 +89,17 @@ window.appRouter = {
     
     // Route based on detected role
     if (isAdmin) {
-      this.showView('admin');
+      await this.showView('admin');
       if (typeof window.initAdminView === 'function') window.initAdminView();
     } else {
-      this.showView('user');
+      await this.showView('user');
       if (typeof window.initUserView === 'function') window.initUserView();
     }
   },
 
-  logout: function() {
+  logout: async function() {
     if (typeof clearSession === 'function') clearSession();
-    this.showView('auth');
+    await this.showView('auth');
   }
 
 };

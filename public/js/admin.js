@@ -17,14 +17,18 @@
   let isFirstLoadAdmin = true;
 
   // ---- DOM refs ----
-  const alertsList     = document.getElementById('alerts-list');
-  const historyList    = document.getElementById('history-list');
-  const emptyActive    = document.getElementById('empty-active');
-  const emptyHistory   = document.getElementById('empty-history');
-  const activeCount    = document.getElementById('active-count');
-  const statActive     = document.getElementById('stat-active');
-  const statDone       = document.getElementById('stat-done');
-  const toastContainer = document.getElementById('toast-container');
+  let alertsList, historyList, emptyActive, emptyHistory, activeCount, statActive, statDone, toastContainer;
+
+  function initElements() {
+    alertsList     = document.getElementById('alerts-list');
+    historyList    = document.getElementById('history-list');
+    emptyActive    = document.getElementById('empty-active');
+    emptyHistory   = document.getElementById('empty-history');
+    activeCount    = document.getElementById('active-count');
+    statActive     = document.getElementById('stat-active');
+    statDone       = document.getElementById('stat-done');
+    toastContainer = document.getElementById('toast-container');
+  }
 
   // ---- Token management ----
   async function getToken() {
@@ -345,6 +349,7 @@
   // ---- INIT ----
   window.initAdminView = function() {
     console.log('--- ADMIN VIEW INIT ---');
+    initElements();
     try {
       if (!map) {
         console.log('Initializing admin map...');

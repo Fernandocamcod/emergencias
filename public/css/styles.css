@@ -503,3 +503,37 @@ body {
   .sos-ring, .sos-ring2 { width: 156px; height: 156px; }
   .emergency-types { grid-template-columns: repeat(2, 1fr); }
 }
+/* ===== VIEW CONTAINERS ===== */
+.view-container { display: none; width: 100%; height: 100%; }
+.view-container.active { display: block; }
+
+/* Extra mobile-first tweaks */
+body { touch-action: manipulation; }
+.user-main { padding-bottom: 3rem; }
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--grey-mid);
+  margin-bottom: 0.75rem;
+}
+
+.tracking-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--grey-mid);
+}
+.tracking-bar .track-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--grey);
+}
+.tracking-bar.active-tracking .track-dot {
+  background: var(--warning);
+  box-shadow: 0 0 6px var(--warning);
+  animation: pulse-btn 1.5s infinite;
+}
+.tracking-bar.active-tracking { color: var(--warning); }
