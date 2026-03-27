@@ -14,6 +14,7 @@
   let knownIds   = new Set(); // already-seen alert IDs (for notifications)
   let pollInterval = null;
   let doneCount  = 0;
+  let isFirstLoadAdmin = true;
 
   // ---- DOM refs ----
   const alertsList     = document.getElementById('alerts-list');
@@ -86,7 +87,9 @@
       // New active alert?
       if (alert.status === 'active' && !knownIds.has(alert._id)) {
         knownIds.add(alert._id);
-        newActive.push(alert);
+        if (!isFirstLoadAdmin) {
+          newActive.push(alert);
+        }
       }
 
       updateMarker(alert);
@@ -96,6 +99,26 @@
       newActive.forEach(a => showToast(a));
       playAlertSound();
       flashTitle(newActive.length);
+      const latest = newActive[0];
+      const lt = parseFloat(latest.lat);
+      const lg = parseFloat(latest.lng);
+      if (!isNaN(lt) && !isNaN(lg)) {
+        map.flyTo([lt, lg], 14, { duration: 1.5 });
+        if (markers[latest._id]) markers[latest._id].openPopup();
+      }
+    }
+
+    if (isFirstLoadAdmin) {
+      isFirstLoadAdmin = false;
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+        const actives = alerts.filter(a => a.status === 'active' && !isNaN(parseFloat(a.lat)) && !isNaN(parseFloat(a.lng)));
+        if (actives.length > 0) {
+          const first = actives[0];
+          map.setView([parseFloat(first.lat), parseFloat(first.lng)], 14);
+          if (markers[first._id]) markers[first._id].openPopup();
+        }
+      }, 300);
     }
 
     renderLists();
@@ -142,11 +165,6 @@
           .addTo(map)
           .bindPopup(popupContent);
         markers[alert._id] = marker;
-
-        if (alert.status === 'active') {
-          map.flyTo(pos, 14, { duration: 1.5 });
-          marker.openPopup();
-        }
       }
     } catch (err) {
       console.error(`Error updating marker for alert ${alert._id}:`, err);
