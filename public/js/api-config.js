@@ -19,9 +19,7 @@ const API_KEY   = FIREBASE_CONFIG.apiKey;
 // ---- Backend API base URL ----
 const API_BASE = 'https://emergencias.onrender.com';
 
-// ---- Admin email ----
-const ADMIN_EMAIL = "leandroescorza789@gmail.com";
-
+// Admin email reference removed for security, now using Firebase Auth Custom Claims
 // ===== LOCAL STORAGE SESSION =====
 const SESSION_KEY = 'em_session';
 function saveSession(data)  { localStorage.setItem(SESSION_KEY, JSON.stringify(data)); }
@@ -83,7 +81,4 @@ async function apiGet(path)          { return apiRequest('GET',   path, null); }
 async function apiPost(path, body)   { return apiRequest('POST',  path, body); }
 async function apiPatch(path, body)  { return apiRequest('PATCH', path, body); }
 
-// ===== IS ADMIN =====
-function isAdminEmail(email) {
-  return email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-}
+// Admin checks are now done via idToken claims on the frontend and validated by the backend.

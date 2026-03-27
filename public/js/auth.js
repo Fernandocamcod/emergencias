@@ -5,12 +5,7 @@
 (function () {
   'use strict';
 
-  // ---- Check if already logged in ----
-  const session = getSession();
-  if (session && session.idToken) {
-    redirectByRole(session.email);
-    return;
-  }
+  // Initialization logic is now moved to appRouter (app.js)
 
   // ---- Tab switching ----
   window.showTab = function (tab) {
@@ -56,11 +51,9 @@
     btn.disabled = loading;
   }
 
-  function redirectByRole(email) {
-    if (isAdminEmail(email)) {
-      window.location.href = 'admin.html';
-    } else {
-      window.location.href = 'user.html';
+  function redirectByRole() {
+    if (window.appRouter) {
+      window.appRouter.navigate(getSession());
     }
   }
 
@@ -98,11 +91,7 @@
     const email   = document.getElementById('reg-email').value.trim().toLowerCase();
     const password = document.getElementById('reg-password').value;
 
-    // Block admin email from being registered through the form
-    if (isAdminEmail(email)) {
-      showError('register', 'Este correo es de uso exclusivo del administrador del sistema.');
-      return;
-    }
+    // Allow any email to register, but admin role enforcement happens on the backend/token
 
     setLoading('register', true);
     try {
@@ -186,7 +175,11 @@
   // ---- LOGOUT ----
   window.handleLogout = function () {
     clearSession();
-    window.location.href = 'index.html';
+    if (window.appRouter) {
+      window.appRouter.showView('auth');
+    } else {
+      window.location.reload();
+    }
   };
 
 })();

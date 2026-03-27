@@ -8,12 +8,8 @@
     ],
     "rewrites": [
       {
-        "source": "/admin",
-        "destination": "/admin.html"
-      },
-      {
-        "source": "/user",
-        "destination": "/user.html"
+        "source": "**",
+        "destination": "/index.html"
       }
     ],
     "headers": [

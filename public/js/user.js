@@ -4,27 +4,20 @@
 (function () {
   'use strict';
 
-  // ---- Guard: require session ----
-  const session = getSession();
-  if (!session || !session.idToken) {
-    window.location.href = 'index.html';
-    return;
-  }
-  // Redirect admin away
-  if (isAdminEmail(session.email)) {
-    window.location.href = 'admin.html';
-    return;
-  }
+  // Auth validation is handled by appRouter
 
   // ---- State ----
   let currentLat      = null;
   let currentLng      = null;
   let gpsReady        = false;
   let selectedType    = null;
-  let activeAlertId   = null;
+  let currentAcc      = 0;
+  let isLowPrecision  = false;
   let trackingInterval = null;
   let userProfile     = null;
   let geoWatchId      = null;
+  let userMap         = null;
+  let userMarker      = null;
 
   // ---- DOM refs ----
   const sosBtnEl     = document.getElementById('sos-btn');
@@ -39,6 +32,7 @@
   const gpsTextEl    = document.getElementById('gps-status-text');
   const nameEl       = document.getElementById('user-display-name');
   const msgInput     = document.getElementById('msg-input');
+  const userMapZone  = document.getElementById('user-map-zone');
 
   // ---- Token management (refresh if needed) ----
   async function getValidToken() {
@@ -58,15 +52,20 @@
   async function loadProfile() {
     try {
       await getValidToken(); // ensure token is fresh
+      const session = getSession();
+      if (!session) return;
       userProfile = await apiGet(`/api/users/${session.uid}`);
-      if (userProfile.name) nameEl.textContent = userProfile.name;
+      if (userProfile && userProfile.name) nameEl.textContent = userProfile.name;
     } catch (e) {
       console.warn('Could not load profile:', e.message);
-      userProfile = {
-        uid: session.uid, email: session.email,
-        name: session.email.split('@')[0], phone: '', emergencyContact: ''
-      };
-      nameEl.textContent = userProfile.name;
+      const session = getSession();
+      if (session) {
+        userProfile = {
+          uid: session.uid, email: session.email,
+          name: session.email.split('@')[0], phone: '', emergencyContact: ''
+        };
+        nameEl.textContent = userProfile.name;
+      }
     }
   }
 
@@ -79,15 +78,25 @@
     setGPSSearching();
     geoWatchId = navigator.geolocation.watchPosition(
       onGPSSuccess, onGPSError,
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }
 
   function onGPSSuccess(pos) {
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
+    currentAcc = pos.coords.accuracy;
+    isLowPrecision = currentAcc > 100;
+
     gpsReady   = true;
-    setGPSReady();
+    if (isLowPrecision) {
+      setGPSReadyWarning();
+      initUserMap();
+    } else {
+      setGPSReady();
+      userMapZone.classList.add('hidden');
+    }
+    if (userMap) updateUserMap();
     if (activeAlertId) pushLocationUpdate();
   }
 
@@ -105,6 +114,11 @@
     gpsTextEl.textContent = 'Buscando GPS...';
     setStatus('warning', '📡 Obteniendo tu ubicación GPS...');
   }
+  function setGPSReadyWarning() {
+    gpsDot.className     = 'gps-dot warning';
+    gpsTextEl.textContent = 'GPS de baja precisión';
+    setStatus('warning', `⚠️ Ubicación aproximada (Margen: ${Math.round(currentAcc)}m). Considera ajustar manualmente si envías SOS.`);
+  }
   function setGPSReady() {
     gpsDot.className     = 'gps-dot';
     gpsTextEl.textContent = 'GPS activo';
@@ -118,6 +132,39 @@
   function setStatus(type, msg) {
     statusBar.className  = 'status-bar' + (type === 'warning' ? ' warning' : type === 'error' ? ' error' : '');
     statusText.textContent = msg;
+  }
+
+  // ---- Manual Map Adjustment ----
+  function initUserMap() {
+    if (userMap) return;
+    userMapZone.classList.remove('hidden');
+    
+    // Tiny delay to ensure container is visible before Leaflet init
+    setTimeout(() => {
+      userMap = L.map('user-map', { zoomControl: false }).setView([currentLat, currentLng], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(userMap);
+
+      userMarker = L.marker([currentLat, currentLng], { draggable: true }).addTo(userMap);
+      
+      userMarker.on('dragend', function(event) {
+        const marker = event.target;
+        const position = marker.getLatLng();
+        currentLat = position.lat;
+        currentLng = position.lng;
+        console.log('Manual GPS adjustment:', currentLat, currentLng);
+      });
+    }, 100);
+  }
+
+  function updateUserMap() {
+    if (userMap && userMarker) {
+      const pos = [currentLat, currentLng];
+      // Only auto-update if NOT being dragged (or just update view if marker is stationary)
+      userMarker.setLatLng(pos);
+      userMap.setView(pos);
+    }
   }
 
   // ---- Emergency type selection ----
@@ -145,9 +192,9 @@
     try {
       await getValidToken();
       const alert = await apiPost('/api/alerts', {
-        uid:              session.uid,
-        email:            session.email,
-        name:             userProfile?.name || session.email.split('@')[0],
+        uid:              getSession().uid,
+        email:            getSession().email,
+        name:             userProfile?.name || getSession().email.split('@')[0],
         phone:            userProfile?.phone || '',
         emergencyContact: userProfile?.emergencyContact || '',
         type:             selectedType,
@@ -155,7 +202,8 @@
         message:          msgInput.value.trim(),
         lat:              currentLat,
         lng:              currentLng,
-        status:           'active'
+        status:           'active',
+        lowPrecision:     isLowPrecision
       });
 
       activeAlertId = alert._id;
@@ -256,8 +304,7 @@
     }
     clearInterval(trackingInterval);
     if (geoWatchId !== null) navigator.geolocation.clearWatch(geoWatchId);
-    clearSession();
-    window.location.href = 'index.html';
+    if (window.appRouter) window.appRouter.logout();
   };
 
   // ---- Helpers ----
@@ -266,7 +313,9 @@
   }
 
   // ---- INIT ----
-  loadProfile();
-  startGPS();
+  window.initUserView = function() {
+    loadProfile();
+    startGPS();
+  };
 
 })();

@@ -4,16 +4,7 @@
 (function () {
   'use strict';
 
-  // ---- Guard: require admin session ----
-  const session = getSession();
-  if (!session || !session.idToken) {
-    window.location.href = 'index.html';
-    return;
-  }
-  if (!isAdminEmail(session.email)) {
-    window.location.href = 'user.html';
-    return;
-  }
+  // Auth validation is handled by appRouter
 
   // ---- State ----
   let allAlerts  = {};        // id -> alert object
@@ -124,6 +115,7 @@
         <div class="popup-type">${label}</div>
         <div class="popup-time">⏱️ ${time}</div>
         ${alert.phone ? `<div style="margin-top:4px;font-size:0.78rem">📞 <a href="tel:${escHtml(alert.phone)}" style="color:#e74c3c">${escHtml(alert.phone)}</a></div>` : ''}
+        ${alert.lowPrecision ? `<div style="margin-top:4px;font-size:0.78rem;color:#f39c12" title="Precisión > 100m">⚠️ Ubicación aproximada (PC/Red)</div>` : ''}
         ${alert.message ? `<div style="margin-top:4px;font-size:0.78rem;color:#bdc3c7">"${escHtml(alert.message)}"</div>` : ''}
       </div>
     `;
@@ -182,6 +174,7 @@
         ${badge}
         <div class="alert-type-label" style="margin-top:0.4rem">${getTypeEmoji(alert.type)} ${escHtml(alert.typeLabel || alert.type)}</div>
         ${alert.lat ? `<div class="alert-coords">📍 ${parseFloat(alert.lat).toFixed(5)}, ${parseFloat(alert.lng).toFixed(5)}</div>` : ''}
+        ${alert.lowPrecision ? `<div style="font-size:0.75rem;color:#f39c12;margin-top:4px;font-weight:bold" title="Precisión > 100m">⚠️ Ubicación aproximada (PC/Red)</div>` : ''}
         ${alert.message ? `<div class="alert-message">"${escHtml(alert.message)}"</div>` : ''}
         <div class="alert-actions">
           ${alert.phone ? `<a href="tel:${escHtml(alert.phone)}" class="btn btn-secondary btn-sm" title="Llamar">📞 ${escHtml(alert.phone)}</a>` : ''}
@@ -213,7 +206,8 @@
     const done   = Object.values(allAlerts).filter(a => a.status === 'attended').length;
     statActive.textContent = active + ' activa' + (active !== 1 ? 's' : '');
     statDone.textContent   = done + ' atendida' + (done !== 1 ? 's' : '');
-    document.getElementById('admin-name-display').textContent = session.email.split('@')[0];
+    const session = getSession();
+    document.getElementById('admin-name-display').textContent = session && session.email ? session.email.split('@')[0] : 'Admin';
   }
 
   // ---- Focus alert on map ----
@@ -229,24 +223,14 @@
 
   // ---- Update alert status in PostgreSQL ----
   window.updateStatus = async function (e, id, status) {
-    if (e) e.stopPropagation();
+    e.stopPropagation();
     try {
       await getToken();
-      const updated = await apiPatch(`/api/alerts/${id}`, { status });
-      
-      // Update local state immediately
-      allAlerts[id] = updated;
-      
-      // If no longer active, cleanup marker
-      if (status === 'attended' || status === 'cancelled') {
-        if (markers[id]) {
-          map.removeLayer(markers[id]);
-          delete markers[id];
-        }
-      } else if (markers[id]) {
-        markers[id].setIcon(makeIcon(status));
+      await apiPatch(`/api/alerts/${id}`, { status });
+      if (allAlerts[id]) allAlerts[id].status = status;
+      if (status === 'attended' && markers[id]) {
+        markers[id].setIcon(makeIcon('attended'));
       }
-      
       renderLists();
       updateStats();
     } catch (e) {
@@ -315,8 +299,8 @@
   // ---- Logout ----
   window.handleLogout = function () {
     clearInterval(pollInterval);
-    clearSession();
-    window.location.href = 'index.html';
+    pollInterval = null;
+    if (window.appRouter) window.appRouter.logout();
   };
 
   // ---- Helpers ----
@@ -329,8 +313,12 @@
   }
 
   // ---- INIT ----
-  initMap();
-  pollAlerts();
-  pollInterval = setInterval(pollAlerts, 5000); // poll every 5 seconds
+  window.initAdminView = function() {
+    if (!map) initMap();
+    pollAlerts();
+    if (!pollInterval) {
+      pollInterval = setInterval(pollAlerts, 5000); // poll every 5 seconds
+    }
+  };
 
 })();
